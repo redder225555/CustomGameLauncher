@@ -1,0 +1,10 @@
+--------------------------------------Thu Aug 29 13:53:47 2024
+INIT FS
+Current Directory is C:\Users\rich\source\repos\PythonApplication2\PythonApplication2
+POST INIT FS
+ReadIni: No settings.ini file
+Can't find file general/mod_giant.slb
+ASRT: 'fp != NULL', ..\wahoolib\Io\WFile.cpp line 998
+ASRT: 'fileFound == true', ..\wahoolib\Io\WFile.cpp line 1051
+ASRT: 'result == SUCCESS', ..\wahoolib\Utils\WSlkUtils.cpp line 211
+ASRT: 'gModInfo != NULL', ..\source\game\CApp.cpp line 2209
