@@ -18,6 +18,8 @@
                         Command="{Binding AddFolderCommand}"/>
                 <Button Content="⟳  Refresh" Style="{StaticResource ToolButton}" Margin="8,0,0,0"
                         Command="{Binding RefreshCommand}"/>
+                <Button Content="🗑  Clear" Style="{StaticResource ToolButton}" Margin="8,0,0,0"
+                        Command="{Binding ClearCommand}"/>
                 <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource Muted}"
                            VerticalAlignment="Center" Margin="16,0,0,0" FontSize="13"/>
                 <TextBox DockPanel.Dock="Right" Width="240" Style="{StaticResource SearchBox}"
@@ -48,7 +50,22 @@
                         <Button Style="{StaticResource TileButton}"
                                 Command="{Binding DataContext.LaunchCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                 CommandParameter="{Binding}"
-                                ToolTip="{Binding ExePath}">
+                                ToolTip="{Binding ExePath}"
+                                Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ItemsControl}}">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Set launch file…"
+                                              Command="{Binding PlacementTarget.Tag.SetLaunchExeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <MenuItem Header="Open game folder"
+                                              Command="{Binding PlacementTarget.Tag.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    <Separator/>
+                                    <MenuItem Header="Remove from list"
+                                              Command="{Binding PlacementTarget.Tag.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                              CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                </ContextMenu>
+                            </Button.ContextMenu>
                             <StackPanel Width="150">
                                 <Grid Width="128" Height="128" HorizontalAlignment="Center">
                                     <Border CornerRadius="12" Background="{StaticResource Panel}"

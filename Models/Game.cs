@@ -10,7 +10,16 @@ namespace CustomGameLauncher.Models;
 public class Game : INotifyPropertyChanged
 {
     public string Name { get; set; } = "";
-    public string ExePath { get; set; } = "";
+
+    private string _exePath = "";
+    public string ExePath { get => _exePath; set { _exePath = value; OnPropertyChanged(); } }
+
+    /// The game's top-level folder (for "open folder" + dedupe + the exe picker).
+    public string FolderPath { get; set; } = "";
+
+    /// Every non-junk exe found in this game's folder — lets you re-pick the
+    /// launch target without rescanning.
+    public List<string> AllExes { get; set; } = new();
 
     [JsonIgnore]
     public string Initial =>

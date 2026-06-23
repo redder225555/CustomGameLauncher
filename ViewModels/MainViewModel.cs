@@ -21,6 +21,10 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand AddFolderCommand { get; }
     public ICommand RefreshCommand { get; }
     public ICommand LaunchCommand { get; }
+    public ICommand SetLaunchExeCommand { get; }
+    public ICommand OpenFolderCommand { get; }
+    public ICommand RemoveCommand { get; }
+    public ICommand ClearCommand { get; }
 
     public MainViewModel()
     {
@@ -33,6 +37,10 @@ public class MainViewModel : INotifyPropertyChanged
         AddFolderCommand = new RelayCommand(async _ => await AddFolderAsync());
         RefreshCommand = new RelayCommand(async _ => await RefreshAsync());
         LaunchCommand = new RelayCommand(Launch);
+        SetLaunchExeCommand = new RelayCommand(SetLaunchExe);
+        OpenFolderCommand = new RelayCommand(OpenFolder);
+        RemoveCommand = new RelayCommand(Remove);
+        ClearCommand = new RelayCommand(_ => ClearAll());
 
         // Initial load from disk + resolve icons.
         foreach (var g in GameStore.Load()) Games.Add(g);
@@ -77,17 +85,19 @@ public class MainViewModel : INotifyPropertyChanged
         var folder = dlg.FolderName;
 
         StatusText = "Scanning…";
-        var exes = await Task.Run(() => GameScanner.Scan(folder));
+        var found = await Task.Run(() => GameScanner.ScanGames(folder));
 
+        // dedupe by game folder (fall back to exe path for older entries)
         var existing = new HashSet<string>(
-            Games.Select(g => g.ExePath), StringComparer.OrdinalIgnoreCase);
+            Games.Select(g => string.IsNullOrEmpty(g.FolderPath) ? g.ExePath : g.FolderPath),
+            StringComparer.OrdinalIgnoreCase);
 
         int added = 0;
-        foreach (var exe in exes)
+        foreach (var g in found)
         {
-            if (existing.Add(exe))
+            if (existing.Add(g.FolderPath))
             {
-                Games.Add(new Game { Name = GameScanner.PrettyName(exe), ExePath = exe });
+                Games.Add(g);
                 added++;
             }
         }
@@ -95,6 +105,44 @@ public class MainViewModel : INotifyPropertyChanged
         GameStore.Save(Games);
         StatusText = $"{Games.Count} games ({added} new)";
         await LoadIconsAsync();
+    }
+
+    private void SetLaunchExe(object? p)
+    {
+        if (p is not Game g) return;
+        var dlg = new OpenFileDialog
+        {
+            Title = $"Pick the launch .exe for {g.Name}",
+            Filter = "Executables (*.exe)|*.exe",
+            InitialDirectory = Directory.Exists(g.FolderPath)
+                ? g.FolderPath
+                : (Path.GetDirectoryName(g.ExePath) ?? "")
+        };
+        if (dlg.ShowDialog() != true) return;
+        g.ExePath = dlg.FileName;
+        g.Icon = null;
+        GameStore.Save(Games);
+        _ = LoadIconsAsync();
+    }
+
+    private void OpenFolder(object? p)
+    {
+        if (p is not Game g) return;
+        var dir = Directory.Exists(g.FolderPath) ? g.FolderPath : Path.GetDirectoryName(g.ExePath);
+        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+            Process.Start(new ProcessStartInfo { FileName = dir, UseShellExecute = true });
+    }
+
+    private void Remove(object? p)
+    {
+        if (p is Game g) { Games.Remove(g); GameStore.Save(Games); UpdateStatus(); }
+    }
+
+    private void ClearAll()
+    {
+        Games.Clear();
+        GameStore.Save(Games);
+        UpdateStatus();
     }
 
     private async Task RefreshAsync()
