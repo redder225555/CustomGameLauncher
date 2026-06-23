@@ -1,6 +1,63 @@
-# CustomGameLauncher
-this is a custom Game Launcher (WIP)
-This was a project that I wanted to start as I dont feel adding all of my games or other EXE files that I use to steam for ease of access so I tried to create a python program that can have a custom background and upload EXE files to while also extracting the Icons from the EXE files but that is also where some of the issue is it is supposed to automatically resize the icon file to the button to launch the EXE file in the game launcher but it doesn't and the grid does not do what I was trying to have it does which was make it where when the buttons reaches the maximum number next to eachother it would go down a row without resizing the buttons but when you refresh the game list it tends to make it where it is 4 in a row then it goes down anyone who wants to help with this can and I would greatly appreciate it I will include pictures of some of the features that it has so you can see if you would like to help or if you think it is a lost cause as I know there are other software and programs like this out there already.
-![alt text](https://github.com/redder225555/CustomGameLauncher/blob/main/Supposed%20to%20look%20somewhat%20like%20this%20but%20the%20rows%20are%20supposed%20to%20be%20closer.png)
-![alt text](https://github.com/redder225555/CustomGameLauncher/blob/main/When%20the%20refresh%20game%20is%20pushed%20it%20goes%20to%20this%20and%20it%20is%20not%20supposed%20to%20do%20that.png)
-![alt text](https://github.com/redder225555/CustomGameLauncher/blob/main/what%20happens%20when%20you%20select%20the%20folder%20you%20want%20to%20search%20for%20exe%20files%20for%20including%20subfolders.png)
+# Custom Game Launcher (WPF rebuild)
+
+A native Windows game launcher — scan a folder of games, get crisp exe icons,
+launch from a clean auto-wrapping grid. C# / .NET 8 / WPF, **zero NuGet
+dependencies** (just the SDK).
+
+## Prerequisites
+- **.NET 8 SDK** (or newer): https://dotnet.microsoft.com/download
+  (the `OpenFolderDialog` used here needs .NET 8+)
+- Windows 10/11
+
+## Build & run
+From this folder:
+
+```
+dotnet run
+```
+
+or open `CustomGameLauncher.csproj` in Visual Studio 2022 (17.8+) and press F5.
+
+To produce a fast-launching standalone .exe (no .NET install needed on the target):
+
+```
+dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true
+```
+
+(WPF doesn't support NativeAOT; ReadyToRun + single-file is the equivalent fast path.)
+
+## What it does
+- **Add Folder** → pick a folder; it recursively scans for game `.exe`s
+  (skipping uninstallers / redistributables / crash handlers — tune the list in
+  `Services/GameScanner.cs`).
+- **Crisp icons**: extracts the real 256px embedded icon natively, scales *down*
+  (never upscaled/stretched — `Image Stretch="Uniform"`), and **disk-caches** it
+  so it's instant next time. No icon → a letter tile, never a white box.
+- **Auto-wrapping grid** (`WrapPanel`) — tiles reflow to fit the window; no manual
+  column math, so no "4-in-a-row on refresh" bug.
+- **Data-bound** (`ObservableCollection` → grid): add/remove/refresh updates the
+  view automatically — no hand-managed widgets, so duplicates can't happen.
+- **Search** box filters live; click a tile to launch.
+- Games persist to `%LOCALAPPDATA%\CustomGameLauncher\games.json`; icon cache in
+  `…\iconcache\`.
+
+## Project layout
+```
+CustomGameLauncher.csproj
+App.xaml / App.xaml.cs          # dark theme + control styles
+MainWindow.xaml / .cs           # toolbar + grid
+Models/Game.cs                  # the bound data item
+ViewModels/MainViewModel.cs     # collection, commands, icon loading
+Services/GameScanner.cs         # folder scan + junk filter
+Services/IconExtractor.cs       # native 256px icon + cache + fallback
+Services/GameStore.cs           # JSON persistence
+RelayCommand.cs                 # minimal ICommand
+```
+
+## Next steps (foundations are here for these)
+- Store **source adapters**: Steam (`libraryfolders.vdf` + `appmanifest_*.acf`),
+  Epic (`%ProgramData%\Epic\…\Manifests\*.item`), itch — each just produces `Game`s.
+- **Box art** via SteamGridDB (free API) instead of exe icons.
+- **VirtualizingWrapPanel** (NuGet) if your library grows into the thousands
+  (the built-in `WrapPanel` renders all items).
+- Right-click menu (rename / remove / set-launch-exe override), categories, last-played.
