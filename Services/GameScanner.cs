@@ -18,9 +18,10 @@ public static class GameScanner
         "ue4prereqsetup", "ue prereq",
         // anti-cheat
         "beservice", "battleye", "easyanticheat", "eac_", "anticheat",
-        // updaters / patchers helpers
+        // updaters / patchers / telemetry / cleanup helpers
         "autoup", "autoupdate", "updater", "crashpad", "crashhandler", "crashreport",
-        "unitycrashhandler", "werfault", "errorreport",
+        "unitycrashhandler", "werfault", "errorreport", "loguploader", "uploader",
+        "cleaner", "telemetry",
         // embedded web / engine helper processes
         "awesomium", "cefsharp", "browsersubprocess", "nwjs", "chromedriver",
         "notification_helper", "subprocess", "helper", "webhelper",
